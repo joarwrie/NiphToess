@@ -18,7 +18,7 @@ filtRs <- file.path(".", "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 # truncLen values for each marker
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(170,150), maxN=0, truncQ=0, multithread=T, rm.phix=F)
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(200,170), maxN=0, truncQ=0, multithread=T, rm.phix=F)
 
 # Error modelling
 errF <- learnErrors(filtFs, multithread=T)
@@ -45,7 +45,7 @@ for (sam in sample.names) {
 plot(sort(overlap))
 
 # Merge pairs
-mergers <- mergePairs(dadaF, derepF, dadaR, derepR, maxMismatch=0, minOverlap = 50)
+mergers <- mergePairs(dadaF, derepF, dadaR, derepR, maxMismatch=0, minOverlap = 150)
 
 # Length selection
 seqtab <- makeSequenceTable(mergers)
