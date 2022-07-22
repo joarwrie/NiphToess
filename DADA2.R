@@ -33,8 +33,8 @@ derepF <- derepFastq(filtFs)
 derepR <- derepFastq(filtRs)
 
 # Denoising
-dadaF <- dada(derepF, err=errF, multithread=T, pool=T)
-dadaR <- dada(derepR, err=errR, multithread=T, pool=T)
+dadaF <- dada(derepF, err=errF, multithread=T, pool=F)
+dadaR <- dada(derepR, err=errR, multithread=T, pool=F)
 
 # Test for minOverlap value
 mergers <- mergePairs(dadaF, derepF, dadaR, derepR, minOverlap = 1, returnRejects = T)
