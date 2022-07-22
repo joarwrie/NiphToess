@@ -61,10 +61,10 @@ getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaF, getN), sapply(dadaR, getN), sapply(mergers, getN), rowSums(seqtab2), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "size", "nonchim")
 rownames(track) <- sample.names
-write.table(file="tab_track_dada2_pooled.csv", track, col.names=T, row.names=T, sep="\t", dec=".", quote=F)
+write.table(file="tab_track_dada2.csv", track, col.names=T, row.names=T, sep="\t", dec=".", quote=F)
 
 ASVs=data.frame(Code=paste(rep("ASV",length(colnames(seqtab.nochim))), 1:length(colnames(seqtab.nochim)), sep="_"), Sequence=getSequences(seqtab.nochim))
 colnames(seqtab.nochim)=paste(rep("ASV",length(colnames(seqtab.nochim))), 1:length(colnames(seqtab.nochim)), sep="_")
-write.table(file="List_ASVs_pooled.fasta", ASVs, col.names=F, row.names=F, sep="\n", dec=".", quote=F)
-write.table(file="tab_distri_ASVs_pooled.csv", seqtab.nochim, col.names=T, row.names=T, sep="\t", dec=".", quote=F)
+write.table(file="List_ASVs.fasta", ASVs, col.names=F, row.names=F, sep="\n", dec=".", quote=F)
+write.table(file="tab_distri_ASVs.csv", seqtab.nochim, col.names=T, row.names=T, sep="\t", dec=".", quote=F)
 
