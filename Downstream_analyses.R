@@ -110,10 +110,12 @@ dev.off()
 blast=read.csv("Blast_res.txt", header = F, sep = "\t", dec = ".")
 colnames(blast)=c("ASV", "qlen", "GIAccNum", "slen", "Ali_length", "Gaps", "Qcovs", "Pident", "Taxid")
 blast$AccNum=do.call(rbind, strsplit(as.character(blast$GIAccNum), "\\|"))[,4]
+  # Keeping only alignments with at least 99% of query cover
 blast=blast[blast$Qcovs>=99,]
 
 # Importing taxonomy
-taxo=read.csv("Assignment/Tab_taxo_Niph_final.txt", header = F, sep = "\t")
+# This file is a table with the full taxonomy for each accession number that matched with one of our sequences
+taxo=read.csv("Tab_taxo.txt", header = F, sep = "\t")
 colnames(taxo)=c("AccNum", "Family", "Species", "Phylum", "Taxid", "Genus", "Class", "Kingdom", "Order")
 taxo=unique(taxo)
 
