@@ -2,7 +2,7 @@ library(dada2)
 library(data.table)
 
 # fastq files reading
-path <- "./Input_DADA2"
+path <- "./inputDADA2"
 
 fnFs <- sort(list.files(path, pattern="_R1_cut.fastq", full.names=T))
 fnRs <- sort(list.files(path, pattern="_R2_cut.fastq", full.names=T))
