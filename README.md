@@ -1,7 +1,5 @@
 # NiphToess
-Pipeline used to analyse the COI library from groundwater eDNA amplified with the primers modified for Niphargus amplification
-
-Pipeline used to evaluate the possibilities and limitations of eDNA metabarcoding for the study of groundwater communities
+Pipeline used to evaluate the possibilities and limitations of eDNA metabarcoding for the study of groundwater communities. It analyses a COI library from groundwater eDNA amplified with primers modified for Niphargus amplification
 
 This pipeline was used in the article “Groundwater environmental DNA metabarcoding reveals hidden diversity and reflects land-use and geology” by Marjorie Couton, Samuel Hürlemann, Angela Studer, Roman Alther & Florian Altermatt, submitted for publication in Molecular Ecology.
 
