@@ -103,9 +103,9 @@ pdf("Figure_2a.pdf", width=8, height=12)
   rarecurve(mat_asvs, step=100, ylab="ASVs", label=T)
 dev.off()
 
-#########################
-# Taxonomical assignment
-#########################
+####################################
+# Taxonomical assignment with Blast
+####################################
 # Importing blast results
 blast=read.csv("Blast_res.txt", header = F, sep = "\t", dec = ".")
 colnames(blast)=c("ASV", "qlen", "GIAccNum", "slen", "Ali_length", "Gaps", "Qcovs", "Pident", "Taxid")
@@ -306,8 +306,8 @@ dev.off()
 ########################
 # Plotting Darn results
 ########################
-# Importing Darn table
-DARN=read.csv("Darn_res_per_query.tsv", header=T, sep="\t", dec=".")
+# Importing Darn table (results of the tool DARN that performs phylogenetic placement)
+DARN=read.csv("DARN_res_per_query.tsv", header=T, sep="\t", dec=".")
 DARN=as.data.table(unique(DARN[,1:8]))
 colnames(DARN)=c("ASV", "LWR", "fract", "aLWR", "afract", "Kingdom", "Phylum", "Class")
 
@@ -332,14 +332,14 @@ DARN[DARN$cbPhylum=="",]$cbPhylum="Unassigned"
 DARN[DARN$LWR<0.5,]$cbClass="Unassigned"
 DARN[DARN$cbClass=="",]$cbClass="Unassigned"
 
-# Adding Kingdom info based on phylum
-Taxo=read.csv("Assignment/Docker_res_Niph_unpooled/Taxo_correction.txt", header=T, sep="\t")
+# Adding Kingdom info based on phylum (Since there are some conflict of taxonomy at the kingdom level in genbank, we upload here a correction file based on WoRMS taxonomy)
+Taxo=read.csv("Taxo_correction.txt", header=T, sep="\t")
 DARN=merge(DARN, Taxo, by="cbPhylum", all=T)
 DARN[is.na(DARN$Kingdom),]$Kingdom=DARN[is.na(DARN$Kingdom),]$cbKingdom
 DARN[is.na(DARN$Phylum),]$Phylum=DARN[is.na(DARN$Phylum),]$cbPhylum
 
 # Keeping only ASVs without assignments
-#tab_export=read.csv("Tab_assignment_allGB_80_final_210622.txt", header=T, sep="\t")
+# The DARN tool was used on the whole list of ASVs but we look at the results only for ASVs that were not assigned with the blast method
 List_ASVs=unique(tab_export[tab_export$level!="Species" & tab_export$level!="Genus" & tab_export$level!="Family",]$ASV)
 DARN=DARN[DARN$ASV%in%List_ASVs,]
 Manquants=length(List_ASVs[!(List_ASVs%in%DARN$ASV)])
@@ -404,232 +404,8 @@ p5=ggplot(tab_graph, aes(x=Level, y=SommeK, fill=Kingdom)) +
   theme(strip.background = element_rect(colour = "black", fill="white"), strip.text = element_text(size=20, face="bold")) +
   scale_fill_manual(values=c("lightsalmon", "indianred2", brewer.pal(8, "YlGnBu")[2:8], "gray50", "white", brewer.pal(11, "Set3")[1], "dodgerblue3", brewer.pal(11, "Set3")[6], "lightsalmon4", brewer.pal(11, "Set3")[3], "hotpink4", brewer.pal(11, "Set3")[7], "forestgreen", brewer.pal(11, "Set3")[2], "gold", brewer.pal(11, "Set3")[4], "firebrick", brewer.pal(11, "Set3")[c(8,10,11,5)]), drop=F)
 
-pdf("Assignment/Barplot_assignments_DARN_Blast.pdf", width=12, height=8)
+pdf("Figure4.pdf", width=12, height=8)
   p5
 dev.off()
 
 #END
-
-
-
-# Graph distri non-assignments
-tab_graph=tab_export[,.(ASV, Compte, FinalAss)]
-tab_graph[tab_graph$FinalAss=="None",]$FinalAss="Unassigned"
-tab_graph[tab_graph$FinalAss!="Unassigned",]$FinalAss="Assigned"
-tab_graph[,"Somme":=sum(Compte), by=FinalAss]
-unique(tab_graph, by="FinalAss")
-
-# Graph distri only assigned sequences
-tab_graph=tab_export[FinalAss!="Unassigned" & FinalAss!="None",.(ASV, Compte, FinalAss, Kingdom)]
-tab_graph[,"Somme":=sum(Compte), by=Kingdom]
-unique(tab_graph, by="Kingdom")
-
-# Graph distri only assigned sequences to 97%
-tab_graph=tab_final[FinalAss!="Unassigned" & FinalAss!="None" & MaxPident>=97,.(ASV, Compte, FinalAss, Kingdom)]
-tab_graph[,"Somme":=sum(Compte), by=Kingdom]
-unique(tab_graph, by="Kingdom")
-
-# Graph distri metazoans
-tab_graph=tab_export[FinalAss!="Unassigned" & FinalAss!="None" & FinalAss!="Metazoa",.(ASV, Compte, FinalAss, Phylum, Kingdom)]
-tab_graph[,"Somme":=sum(Compte), by=Phylum]
-unique(tab_graph[tab_graph$Kingdom=="Metazoa",], by="Phylum")
-
-# Graph distri arthropods 85
-tab_graph=tab_export[FinalAss!="Unassigned" & FinalAss!="None" & FinalAss!="Metazoa" & FinalAss!="Arthropoda",]
-tab_graph[,"Somme":=sum(Compte), by=FinalAss]
-unique(tab_graph[Phylum=="Arthropoda",.(FinalAss, Somme)])
-
-# Graph distri arthropods 97
-tab_graph=tab_export[FinalAss!="Unassigned" & FinalAss!="None" & FinalAss!="Metazoa" & FinalAss!="Arthropoda" & MaxPident>=97,]
-tab_graph[,"Somme":=sum(Compte), by=FinalAss]
-unique(tab_graph[Phylum=="Arthropoda",.(FinalAss, Somme)])
-
-# Graph assignment level 
-tab_graph=unique(tab_final[,.(ASV, MaxPident)])
-tab_graph[is.na(tab_graph$MaxPident),]$MaxPident=75
-ggplot(tab_graph, aes(x=MaxPident)) +
-  geom_density()
-
-
-# Importing Blast results
-BlastRes=read.csv("Res_blast_Niph_141221.txt", header=F, sep="\t", dec=".")
-colnames(BlastRes)=c("Qseqid", "Sseqid", "Pident", "Qcov")
-Blast_qcov=BlastRes[BlastRes$Qcov>=99,]
-Blast_final=as.data.table(Blast_qcov)
-Blast_final[,"MaxIdent":=max(Pident), by=Qseqid]
-Blast_final=Blast_final[Blast_final$Pident==Blast_final$MaxIdent,]Blast_final=as.data.table(Blast_qcov)
-
-# Import table with assignment results
-NiphTab=read.csv("Niphargus_assignment.txt", header = T, sep = "\t")
-# Choosing Niphargus ASVs
-tab_graph=tableau[tableau$ASV%in%NiphTab$ASV,]
-tab_graph=merge(tab_graph, NiphTab, by="ASV", all=T)
-tab_graph[,"TotSpecies":=sum(Compte), by=.(Species, Echantillon)]
-tab_graph=unique(tab_graph, by=c("Species", "Echantillon"))
-# Graph distribution
-ggplot(tab_graph, aes(x=Echantillon, y=TotSpecies, fill=Species)) +
-  geom_bar(stat="identity", position="stack", color="black") +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_text(size=8), axis.text.y=element_text(size=10), axis.title=element_text(size=14), plot.title=element_text(size=18, face="bold", hjust=0.5)) +
-  xlab("") + ylab("Nb reads\n") + labs(title="Before correction\n") +
-  scale_fill_manual(values=brewer.pal(7, "Set2"))
-
-# Graph for Anschi's results
-Anschi=read.csv("~/Results/Töss barcoding/combined_AmphiWell_data_taxalist.txt", header=T, sep="\t")
-Anschi=as.data.table(Anschi)
-Anschi[,"Compte":=.N, by=.(site_name, species)]  
-tab_graph=unique(Anschi, by=c("site_name", "species"))
-tab_graph=tab_graph[,c(8,16,34)]
-List_sites=c("Sibilenrain 3", "Bruedergarten 8", "Oberschlatt D", "Semmerrüti", "Pfaffberg", "Sennweid", "Gantersmass", "Steichel", "Samichlaus", "Abseggbrunnen", "Mülihalden", "Geissberg", "Brüggelwiesen", "Brandholz Nord", "Unterstädli", "Hinterrüti", "Berg")
-tab_graph=tab_graph[tab_graph$site_name%in%List_sites,]
-tab_graph=tab_graph[tab_graph$species!="no sequence" & tab_graph$species!="not clear" & tab_graph$species!="very short sequence",]
-ggplot(tab_graph, aes(x=site_name, y=Compte, fill=species)) +
-  geom_bar(stat="identity", position="stack", color="black") +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_text(size=8, angle=45, vjust=0.2), axis.text.y=element_text(size=10), axis.title=element_text(size=14), plot.title=element_text(size=18, face="bold", hjust=0.5)) +
-  xlab("") + ylab("Nb individuals\n") + labs(title="Anschi's results\n") +
-  scale_fill_manual(values=c("dodgerblue3", brewer.pal(7, "Set2")[c(1,2,4,6,7)]))
-
-# Graph distribution after correction
-tab_graph=tab_final[tab_final$ASV%in%NiphTab$ASV,]
-tab_graph=merge(tab_graph, NiphTab, by="ASV", all.x=T, all.y=F)
-tab_graph[,"TotSpecies":=sum(Compte), by=.(Species, Echantillon)]
-tab_graph=unique(tab_graph, by=c("Species", "Echantillon"))
-# Graph distribution
-ggplot(tab_graph, aes(x=Echantillon, y=TotSpecies, fill=Species)) +
-  geom_bar(stat="identity", position="stack", color="black") +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_text(size=8), axis.text.y=element_text(size=10), axis.title=element_text(size=14), plot.title=element_text(size=18, face="bold", hjust=0.5)) +
-  xlab("") + ylab("Nb reads\n") + labs(title="After correction\n") +
-  scale_fill_manual(values=brewer.pal(7, "Set2")[c(2,4:7)])
-
-############################
-# General assignment ECOTAG
-############################
-# Importing ecotag results and ASV table
-Ecotag=read.csv("Tab_res_ecotag_temp.csv", header=T, sep=";", dec=".")
-tab_brut=read.csv("tab_distri_ASVs_Niph.csv", header=T, sep="\t")
-tab_filt=read.csv("tab_postFiltering_2reps_141221.txt", header=T, sep = "\t")
-
-# Modification of the assignment table
-Ecotag$Rank="Species"
-Ecotag[Ecotag$Species=="None",]$Rank="Genus"
-Ecotag[Ecotag$Genus=="None",]$Rank="Family"
-Ecotag[Ecotag$Family=="None",]$Rank="Order"
-Ecotag[Ecotag$Order=="None",]$Rank="Phylum"
-Ecotag[Ecotag$Phylum=="None",]$Rank="Kingdom"
-Ecotag[Ecotag$Kingdom=="None",]$Rank="Super Kingdom"
-Ecotag[Ecotag$Assignment=="root",]$Rank="Unassigned"
-
-# Merging the two tables
-tab_final=merge(Ecotag, unique(tab_filt[,c(2,7)]), by="ASV", all=F)
-
-# Evaluating the proportion of assignments
-tab_final=as.data.table(tab_final)
-tab_final[,"SumRank":=sum(TotASV), by=Rank]
-tab_graph=unique(tab_final[,c(10,12)])
-tab_graph$Rank=factor(tab_graph$Rank, levels=c("Unassigned", "Super Kingdom", "Kingdom", "Phylum", "Order", "Family", "Genus", "Species"))
-tab_graph$Prop=round(tab_graph$SumRank/sum(tab_graph$SumRank)*100, 2)
-ggplot(tab_graph, aes(x=Rank, y=SumRank)) +
-  geom_bar(stat="identity", color="black", fill="cornflowerblue") +
-  geom_text(aes(label=tab_graph$Prop), nudge_y = 100000) +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_text(size=10), axis.text.y=element_text(size=10), axis.title=element_text(size=14), plot.title=element_text(size=18, face="bold", hjust=0.5)) +
-  xlab("") + ylab("Nb reads\n") + labs(title="After correction\n") 
-
-# Looking at assignments at high levels
-tab_final[tab_final$Kingdom=="None",]$Kingdom=paste("Unassigned", tab_final[tab_final$Kingdom=="None",]$Assignment, sep=" ")
-tab_final$Kingdom=as.character(tab_final$Kingdom)
-tab_final[grep("Korotnevella",tab_final$Kingdom),]$Kingdom="Protozoa"
-tab_final[tab_final$Kingdom=="Unassigned Rhodophyta",]$Kingdom="Plantae"
-tab_final[tab_final$Kingdom=="Unassigned Vannella sp.",]$Kingdom="Protozoa"
-tab_final[grep("Pedospumella", tab_final$Kingdom),]$Kingdom="Chromista"
-tab_final[tab_final$Kingdom=="Unassigned Chromulinales",]$Kingdom="Chromista"
-tab_final[tab_final$Kingdom=="Unassigned Ecdysozoa",]$Kingdom="Metazoa"
-tab_final[tab_final$Kingdom=="Unassigned Amoebozoa",]$Kingdom="Protozoa"
-tab_final[tab_final$Kingdom=="Unassigned Ochrophyta",]$Kingdom="Chromista"
-tab_final[tab_final$Kingdom=="Unassigned Chrysophyceae sp. LG-2014k",]$Kingdom="Chromista"
-
-tab_final[,"SumKing":=sum(TotASV), by=Kingdom]
-tab_graph=unique(tab_final[,c(9,13)])
-tab_graph=tab_graph[order(-SumKing),]
-tab_graph$Kingdom=factor(tab_graph$Kingdom, levels=unique(tab_graph$Kingdom))
-ggplot(tab_graph, aes(x="", y=SumKing, fill=Kingdom)) +
-  geom_bar(stat="identity", color="black") +
-  coord_polar("y", start=0) +
-  theme(legend.position = "right", legend.title = element_blank()) +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_blank(), axis.text.y=element_blank()) +
-  xlab("") + ylab("") + 
-  scale_fill_manual(values=c(brewer.pal(7, "Set2"), "darkred", rep("grey", 74)), limits=c(tab_graph$Kingdom[1:8]))
-
-# Assigments to Metazoan phylum
-tab_final[,"SumPhylum":=sum(TotASV), by=Phylum]
-tab_graph=unique(tab_final[tab_final$Kingdom=="Metazoa", c(4,14)])
-tab_graph[tab_graph$Phylum=="None",]$Phylum="Unassigned Metazoa"
-tab_graph=tab_graph[order(-SumPhylum),]
-tab_graph$Phylum=factor(tab_graph$Phylum, levels=unique(tab_graph$Phylum))
-ggplot(tab_graph, aes(x="", y=SumPhylum, fill=Phylum)) +
-  geom_bar(stat="identity", color="black") +
-  coord_polar("y", start=0) +
-  theme(legend.position = "right", legend.title = element_blank()) +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_blank(), axis.text.y=element_blank()) +
-  xlab("") + ylab("") + 
-  scale_fill_manual(values=c(brewer.pal(8, "Set2"), brewer.pal(5, "Dark2")))
-
-# Assignments to Arthropoda orders
-tab_final[,"SumOrder":=sum(TotASV), by=Order]
-tab_graph=unique(tab_final[tab_final$Phylum=="Arthropoda", c(8,15)])
-tab_graph[tab_graph$Order=="None",]$Order="Unassigned Arthropoda"
-tab_graph=tab_graph[order(-SumOrder),]
-tab_graph$Order=factor(tab_graph$Order, levels=unique(tab_graph$Order))
-ggplot(tab_graph, aes(x="", y=SumOrder, fill=Order)) +
-  geom_bar(stat="identity", color="black") +
-  coord_polar("y", start=0) +
-  theme(legend.position = "right", legend.title = element_blank()) +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_blank(), axis.text.y=element_blank()) +
-  xlab("") + ylab("") + 
-  scale_fill_manual(values=c(brewer.pal(8, "Set2"), brewer.pal(7, "Dark2")))
-
-###########################
-# General assignment Blast
-###########################
-
-# Graph Niphargus after correction
-tab_graph=tab_export[grep("Niphargus", tab_export$FinalAss),]
-tab_graph[tab_graph$FinalAss=="Niphargus",]$FinalAss="Niphargus tonywhitteni"
-tab_graph[,"Somme":=sum(Compte), by=.(FinalAss, Echantillon)]
-tab_graph=unique(tab_graph[,c(22,25,37)])
-List_ech=unique(tab_export$Echantillon)
-tab_graph$Echantillon=factor(tab_graph$Echantillon, levels=unique(sort(List_ech))[c(1:12,15,16,17,19,20)])
-ggplot(tab_graph, aes(x=Echantillon, y=Somme, fill=FinalAss))+
-  geom_bar(stat="identity", color="black") +
-  scale_x_discrete(drop=F) +
-  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
-  theme(axis.text.x=element_text(size=14, angle=45, vjust=0.5), axis.text.y=element_text(size=14)) +
-  ylab("") + xlab("") +
-  scale_fill_manual(values=c("gold", "dodgerblue", "indianred", "seagreen", "mediumpurple"))
-
-# To save in case
-DARN[,"Ki_LWR":=max(LWR), by=.(ASV, Kingdom)]
-DARN[,"Ph_LWR":=max(LWR), by=.(ASV, Kingdom, Phylum)]
-DARN[,"Cl_LWR":=max(LWR), by=.(ASV, Kingdom, Phylum, Class)]
-#Keeping the Super kingdom with the best weight ratio
-DARN[,"Max_Ki_LWR":=max(Ki_LWR), by=ASV]
-DARN=DARN[DARN$Ki_LWR==DARN$Max_Ki_LWR,]
-#Keeping the phylum with the best weight ratio
-DARN[,"Max_Ph_LWR":=max(Ph_LWR), by=ASV]
-DARN=DARN[DARN$Ph_LWR==DARN$Max_Ph_LWR,]
-#Removing lines with no phylum when multiple lines for the same ASV
-DARN[,"NbLines":=.N, by=ASV]
-DARN=DARN[DARN$NbLines==1 | DARN$Phylum!="",]
-#Keeping the class with the best weight ratio
-DARN[,"Max_Cl_LWR":=max(Cl_LWR), by=ASV]
-DARN=DARN[DARN$Cl_LWR==DARN$Max_Cl_LWR,]
-#Removing lines with no phylum when multiple lines for the same ASV
-DARN[,"NbLines":=.N, by=ASV]
-DARN=DARN[DARN$NbLines==1 | DARN$Class!="",]
-DARN=unique(DARN[,-(2:5)])
-
