@@ -115,7 +115,7 @@ blast=blast[blast$Qcovs>=99,]
 
 # Importing taxonomy
 # This file is a table with the full taxonomy for each accession number that matched with one of our sequences
-taxo=read.csv("Tab_taxo.txt", header = F, sep = "\t")
+taxo=rbind(read.csv("Tab_taxo_part1.txt", header = F, sep = "\t"), read.csv("Tab_taxo_part2.txt", header = F, sep = "\t"), read.csv("Tab_taxo_part3.txt", header = F, sep = "\t"))
 colnames(taxo)=c("AccNum", "Family", "Species", "Phylum", "Taxid", "Genus", "Class", "Kingdom", "Order")
 taxo=unique(taxo)
 
@@ -174,7 +174,8 @@ Finale[Finale$ASV=="ASV_1331",]$level="Species"
 tab_export=merge(Finale, tab_final, by="ASV", all.x=F, all.y=T)
 tab_export[is.na(tab_export$Assignment),]$Assignment="Unassigned"
 tab_export[tab_export$Assignment=="Unassigned",]$level="Unassigned"
-write.table(tab_export, file="Assignment/Tab_assignment_allGB_80_final_280722.txt", col.names = T, row.names = F, sep="\t", dec=".", quote=F)
+  # Exporting the blast assignment results in a table
+write.table(tab_export, file="Tab_assignment_blast_allGB_80.txt", col.names = T, row.names = F, sep="\t", dec=".", quote=F)
 
 ##############################
 # Plotting assignment results
@@ -217,23 +218,23 @@ p2=ggplot(Nbreads, aes(x=X, y=NbASVs, fill=level)) +
     scale_fill_manual(values=c("gray60", brewer.pal(9, "Spectral")[c(1:3,5,7:9)])) +
     geom_label(data=unique(Nbreads, by="X"), aes(x=X, y=TotASV, label=Somme), fill="white", nudge_y = 350)
 
-pdf("Assignment/Barplot_assignment_blast_280722.pdf", width=9, height=6)
+pdf("Figure3.pdf", width=9, height=6)
   p2
 dev.off()
 
-# Table S3 tableau de contingence ASVs avec assignations
+# Table S3 Contingency table: distribution of ASVs with their assignment
 tabS3=dcast(tab_export, ASV~Site, fun.aggregate = sum, value.var = "Compte", fill=0)
 tabS3=merge(tabS3, unique(tab_export[,c(1,11:20)]), by="ASV", all=T)
-write.table(tabS3, file="Assignment/Tab_contingence_ASV_assigned_blast_280722.txt", col.names = T, row.names = F, quote = F, sep = "\t", dec = ".")
+write.table(tabS3, file="Tab_distri_ASV_assigned_blast.txt", col.names = T, row.names = F, quote = F, sep = "\t", dec = ".")
 
-# Table 1 ASVs assigned to Arthropod species
+# Table 1 ASVs assigned to metazoan species
 tab1=tab_export[tab_export$Kingdom=="Metazoa",c(1,11:23)]
 tab1[,"Reads":=sum(Compte), by=ASV]
 tab1=unique(tab1, by=c("ASV", "Site"))
 tab1[,"NbSites":=.N, by=ASV]
 tab1=unique(tab1, by="ASV")
 tab1=tab1[tab1$level=="Species" | tab1$level=="Genus" | tab1$level=="Family",]
-write.table(tab1, file="Assignment/Tab_assignment_metazoa_280722.txt", col.names = T, row.names = F, quote = F, sep = "\t", dec = ".")
+write.table(tab1, file="Tab_assignment_metazoa.txt", col.names = T, row.names = F, quote = F, sep = "\t", dec = ".")
 
 #####################
 # Diversity analyses
@@ -245,12 +246,10 @@ conting=as.matrix(conting[,2:21])
 row.names(conting)=Noms
 tab_hellinger=decostand(t(conting), method="hellinger")
 tab_pca=rda(tab_hellinger, scale=F)
-#screeplot(tab_pca, bstick = T, npcs=length(tab_pca$CA$eig))
+
 tab_sc1=as.data.frame(scores(tab_pca, display = "sites", scaling=1))
 tab_sc2=as.data.frame(scores(tab_pca, display = "species", scaling=1))
 tab_sc2$length=sqrt(tab_sc2$PC1^2+tab_sc2$PC2^2)
-#biplot(tab_pca, display="sites", scaling=1)
-#cleanplot.pca(tab_pca, scaling=1, select.spe = which(tab_sc2$length>0.32465))
 
 tab_graph=rbind(tab_sc1, tab_sc2[tab_sc2$length>0.32465,1:2])
 tab_graph$Type=c(rep("Site", 20), rep("ASV", 10))
@@ -271,7 +270,7 @@ p3=ggplot(tab_graph[tab_graph$Type=="Site",], aes(x=PC1, y=PC2, color=aquifer, f
   geom_segment(data=tab_graph[tab_graph$Type=="ASV",], aes(x=0, y=0, xend=PC1, yend=PC2), size=1, lineend = "round", linejoin = "round", arrow=arrow(length=unit(0.5, "cm"))) +
   geom_text(data=tab_graph, aes(x=PC1, y=PC2), label=row.names(tab_graph), nudge_x = -0.03, nudge_y = 0.02, color="black", size=5)
 
-pdf("Diversity/PCA_hellinger_aquifer_land_270722.pdf", width=8, height=7)
+pdf("Figure6.pdf", width=8, height=7)
   p3
 dev.off()
 
@@ -300,7 +299,7 @@ p4=ggplot(tab_graph, aes(x=Var1, y=Var2)) +
   xlab("") + ylab("") +
   theme(legend.text = element_text(size=16), legend.title = element_text(size=18))
 
-pdf("Diversity/Heatmap_ASV_hellinger_270722.pdf", width=10, height=10)
+pdf("Figure5", width=10, height=10)
   p4
 dev.off()
 
@@ -308,7 +307,7 @@ dev.off()
 # Plotting Darn results
 ########################
 # Importing Darn table
-DARN=read.csv("Assignment/Docker_res_Niph_unpooled/intermediate/gappa_exhaustive/darn_assign_exhaustive_List_ASVs_Niph_unpooled_per_query.tsv", header=T, sep="\t", dec=".")
+DARN=read.csv("Darn_res_per_query.tsv", header=T, sep="\t", dec=".")
 DARN=as.data.table(unique(DARN[,1:8]))
 colnames(DARN)=c("ASV", "LWR", "fract", "aLWR", "afract", "Kingdom", "Phylum", "Class")
 
