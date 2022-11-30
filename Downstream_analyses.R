@@ -8,7 +8,6 @@ library(vegan)
 library(RColorBrewer)
 library(stringr)
 library(ade4)
-source("~/Scripts/cleanplot.pca.R")
 
 #################################
 # Contingency table modification
