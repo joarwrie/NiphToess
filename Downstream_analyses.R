@@ -60,6 +60,7 @@ write.table(file="TableS2.txt", TableS2, col.names=T, row.names=F, sep="\t")
 # Checking for efficiency of the protocol
 ##########################################
 # Accumulation curves
+  # Per site including both filter and PCR replicates (20 replicates per site)
 mat_asvs=reshape2::dcast(tab_final, Sample~ASV, fill=0, value.var="Compte", fun.aggregate = sum)
 List_ech=mat_asvs$Sample
 mat_asvs=as.matrix(mat_asvs[,-1])
@@ -93,6 +94,77 @@ pdf("Figure_2b.pdf", width=8, height=12)
 p1
 dev.off()
 
+  # Per site displaying only the filter replicates (all 5 PCR replicates of one filter pooled)  
+mat_asvs=tab_final
+mat_asvs$filt_num=do.call(rbind, strsplit(as.character(mat_asvs$Sample), "_"))[,1]
+mat_asvs=reshape2::dcast(mat_asvs, filt_num~ASV, fill=0, value.var="Compte", fun.aggregate = sum)
+List_ech=mat_asvs$filt_num
+mat_asvs=as.matrix(mat_asvs[,-1])
+row.names(mat_asvs)=List_ech
+List_ech=do.call(rbind, strsplit(as.character(List_ech), "-"))[,1]
+graph=vector("list", 20)
+names(graph)=unique(List_ech)
+compt=0
+tab_graph=data.frame(Site="", Replicates="", Richness=0, sd=0)
+for (i in unique(List_ech)){
+  compt=compt+1
+  graph[[compt]]=specaccum(mat_asvs[grep(i, row.names(mat_asvs)),])
+  tab_tmp=cbind(rep(i, max(graph[[compt]]$sites)), graph[[compt]]$sites, graph[[compt]]$richness, graph[[compt]]$sd)
+  colnames(tab_tmp)=c("Site", "Replicates", "Richness", "sd")
+  tab_graph=rbind(tab_graph, tab_tmp)
+}
+tab_graph=tab_graph[-1,]
+tab_graph$Replicates=as.integer(tab_graph$Replicates)
+tab_graph$Richness=as.numeric(tab_graph$Richness)
+tab_graph=as.data.table(tab_graph)
+tab_graph[,"MaxReads":=max(Richness), by=Site]
+
+p1bis=ggplot(tab_graph, aes(x=Replicates, y=Richness, group=Site)) +
+  geom_line() +
+  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=25)) +
+  xlab("\nNumber of Filters") + ylab("Number of ASVs\n") +
+  geom_text(data=unique(tab_graph[,c(1,5)]), aes(x=4.2, y=MaxReads, label=Site))
+
+pdf("Figure_2c.pdf", width=8, height=12)
+p1bis
+dev.off()
+
+  # Per Filter displaying the effect of the 5 PCR replicates
+mat_asvs=reshape2::dcast(tab_final, Sample~ASV, fill=0, value.var="Compte", fun.aggregate = sum)
+List_ech=mat_asvs$Sample
+mat_asvs=as.matrix(mat_asvs[,-1])
+row.names(mat_asvs)=List_ech
+List_ech=do.call(rbind, strsplit(as.character(List_ech), "_"))[,1]
+graph=vector("list", 80)
+names(graph)=unique(List_ech)
+compt=0
+tab_graph=data.frame(Site="", Replicates="", Richness=0, sd=0)
+for (i in unique(List_ech)){
+  compt=compt+1
+  graph[[compt]]=specaccum(mat_asvs[grep(i, row.names(mat_asvs)),])
+  tab_tmp=cbind(rep(i, max(graph[[compt]]$sites)), graph[[compt]]$sites, graph[[compt]]$richness, graph[[compt]]$sd)
+  colnames(tab_tmp)=c("Site", "Replicates", "Richness", "sd")
+  tab_graph=rbind(tab_graph, tab_tmp)
+}
+tab_graph=tab_graph[-1,]
+tab_graph$Replicates=as.integer(tab_graph$Replicates)
+tab_graph$Richness=as.numeric(tab_graph$Richness)
+tab_graph=as.data.table(tab_graph)
+tab_graph[,"MaxReads":=max(Richness), by=Site]
+
+p1ter=ggplot(tab_graph, aes(x=Replicates, y=Richness, group=Site)) +
+  geom_line() +
+  theme(panel.background=element_rect(fill="white", colour="black"), axis.line=element_line(colour="black")) +
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=25)) +
+  xlab("\nNumber of PCR replicates") + ylab("Number of ASVs\n") +
+  geom_text(data=unique(tab_graph[,c(1,5)]), aes(x=5.2, y=MaxReads, label=Site))
+
+pdf("Figure_2d.pdf", width=8, height=12)
+p1ter
+dev.off()
+
+# Rarefaction curves of reads for each site
 mat_asvs=reshape2::dcast(tab_final, Site~ASV, fill=0, value.var="Compte", fun.aggregate = sum)
 List_ech=mat_asvs$Site
 mat_asvs=as.matrix(mat_asvs[,-1])
