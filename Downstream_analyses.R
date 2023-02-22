@@ -347,8 +347,8 @@ dev.off()
 
 # Permanova
 tab_env=read.csv("tab_env.txt", header=T, sep="\t")
-adonis2(tab_hellinger~Landuse+Aquifer, data=tab_env, permutations=9999, method="euclidean", by="term")
-adonis2(tab_hellinger~Aquifer+Landuse, data=tab_env, permutations=9999, method="euclidean", by="term")
+adonis2(tab_hellinger~Landuse+Aquifer, data=tab_env, permutations=9999, method="euclidean", by="terms")
+adonis2(tab_hellinger~Aquifer+Landuse, data=tab_env, permutations=9999, method="euclidean", by="terms")
 
 # Heatmap for all PCR replicates
 conting=dcast(tab_final, ASV~Sample, fun.aggregate = sum, fill=0, value.var = "Compte")
