@@ -1,21 +1,21 @@
-Sites	Aquifer	Landuse
-Abs	Unconsolidated	Forest
-Ber	Fissured	Agriculture
-BraN	Fissured	Forest
-Bru6	Fissured	Agriculture
-Bru8	Unconsolidated	Forest
-Gan	Unconsolidated	Forest
-GeiL	Unconsolidated	Forest
-Hina	Fissured	Forest
-Mul	Fissured	Agriculture
-ObeD	Fissured	Forest
-Pfa	Unconsolidated	Forest
-Pfu	Fissured	Forest
-ReiL	Fissured	Agriculture
-Ror1	Fissured	Agriculture
-Sam3	Fissured	Forest
-Sem	Unconsolidated	Forest
-Sen	Fissured	Agriculture
-Sib3	Fissured	Forest
-Ste1	Fissured	Agriculture
-Unt	Fissured	Forest
+Sites	Aquifer	Landuse	Month
+Abs	Unconsolidated	Forest	May
+Ber	Fissured	Agriculture	May
+BraN	Fissured	Forest	June
+Bru6	Fissured	Agriculture	May
+Bru8	Unconsolidated	Forest	May
+Gan	Unconsolidated	Forest	June
+GeiL	Unconsolidated	Forest	May
+Hina	Fissured	Forest	April
+Mul	Fissured	Agriculture	May
+ObeD	Fissured	Forest	May
+Pfa	Unconsolidated	Forest	April
+Pfu	Fissured	Forest	May
+ReiL	Fissured	Agriculture	June
+Ror1	Fissured	Agriculture	April
+Sam3	Fissured	Forest	June
+Sem	Unconsolidated	Forest	June
+Sen	Fissured	Agriculture	April
+Sib3	Fissured	Forest	June
+Ste1	Fissured	Agriculture	April
+Unt	Fissured	Forest	April
